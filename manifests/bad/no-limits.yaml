@@ -1,0 +1,14 @@
+# ❌ Violates K8sRequiredResources — no resources.limits
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: bad-no-limits, namespace: demo }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: bad-no-limits } }
+  template:
+    metadata: { labels: { app: bad-no-limits } }
+    spec:
+      securityContext: { runAsNonRoot: true, runAsUser: 10001 }
+      containers:
+        - name: app
+          image: nginx:1.27

@@ -1,0 +1,3 @@
+# Add CVE IDs here to suppress (with justification + expiry date).
+# Example:
+# CVE-2023-12345  # false positive in test fixture, recheck 2026-01-01

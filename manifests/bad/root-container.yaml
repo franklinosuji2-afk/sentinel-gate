@@ -1,0 +1,16 @@
+# ❌ Violates K8sDisallowRoot — runAsUser: 0
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: bad-root, namespace: demo }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: bad-root } }
+  template:
+    metadata: { labels: { app: bad-root } }
+    spec:
+      containers:
+        - name: app
+          image: nginx:1.27
+          securityContext: { runAsUser: 0 }
+          resources:
+            limits: { cpu: 100m, memory: 64Mi }

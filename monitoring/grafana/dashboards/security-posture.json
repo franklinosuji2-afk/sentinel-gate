@@ -1,0 +1,27 @@
+{
+  "title": "KubeSentinel — Security Posture",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "tags": ["kubesentinel", "security"],
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Gatekeeper Denials (1h)",
+      "targets": [{ "expr": "sum(increase(gatekeeper_violations_total[1h]))" }],
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 }
+    },
+    {
+      "type": "timeseries",
+      "title": "Falco Alerts by Priority",
+      "targets": [{ "expr": "sum by (priority) (rate(falco_events_total[5m]))" }],
+      "gridPos": { "x": 6, "y": 0, "w": 18, "h": 8 }
+    },
+    {
+      "type": "table",
+      "title": "Top Violating Constraints",
+      "targets": [{ "expr": "topk(10, sum by (kind, name) (gatekeeper_violations_total))" }],
+      "gridPos": { "x": 0, "y": 8, "w": 24, "h": 8 }
+    }
+  ]
+}

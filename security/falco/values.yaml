@@ -1,0 +1,35 @@
+driver:
+  kind: ebpf
+falco:
+  json_output: true
+  log_level: info
+  http_output:
+    enabled: false
+falcosidekick:
+  enabled: true
+  config:
+    prometheus:
+      enabled: true
+
+customRules:
+  kubesentinel-rules.yaml: |-
+    - rule: Shell Spawned in Container
+      desc: A shell was started inside a running container — almost always suspicious.
+      condition: spawned_process and container and shell_procs and not user_expected_terminal_shell_in_container_conditions
+      output: "Shell in container (user=%user.name container=%container.name image=%container.image.repository cmd=%proc.cmdline)"
+      priority: WARNING
+      tags: [container, shell, kubesentinel]
+
+    - rule: Package Manager Used at Runtime
+      desc: Package managers should not run inside a running pod.
+      condition: spawned_process and container and user.name != "root" and (proc.name in (apt, apt-get, dpkg, apk, yum, dnf, pip, pip3))
+      output: "Package manager run in container (user=%user.name cmd=%proc.cmdline container=%container.name)"
+      priority: WARNING
+      tags: [container, kubesentinel]
+
+    - rule: Write Below /etc
+      desc: Anything writing under /etc inside a container is suspicious.
+      condition: open_write and container and fd.name startswith /etc
+      output: "Write below /etc in container (user=%user.name file=%fd.name container=%container.name)"
+      priority: ERROR
+      tags: [filesystem, kubesentinel]

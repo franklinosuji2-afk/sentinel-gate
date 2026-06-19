@@ -1,0 +1,17 @@
+# ❌ Violates K8sDisallowPrivileged — privileged: true
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: bad-privileged, namespace: demo }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: bad-privileged } }
+  template:
+    metadata: { labels: { app: bad-privileged } }
+    spec:
+      securityContext: { runAsNonRoot: true, runAsUser: 10001 }
+      containers:
+        - name: app
+          image: nginx:1.27
+          securityContext: { privileged: true }
+          resources:
+            limits: { cpu: 100m, memory: 64Mi }

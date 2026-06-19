@@ -1,0 +1,14 @@
+severity:
+  - HIGH
+  - CRITICAL
+vulnerability:
+  type:
+    - os
+    - library
+scan:
+  security-checks:
+    - vuln
+    - config
+    - secret
+exit-code: 1
+ignore-unfixed: true

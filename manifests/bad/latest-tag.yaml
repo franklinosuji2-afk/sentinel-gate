@@ -1,0 +1,16 @@
+# ❌ Violates K8sDisallowLatestTag — image: nginx:latest
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: bad-latest, namespace: demo }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: bad-latest } }
+  template:
+    metadata: { labels: { app: bad-latest } }
+    spec:
+      securityContext: { runAsNonRoot: true, runAsUser: 10001 }
+      containers:
+        - name: app
+          image: nginx:latest
+          resources:
+            limits: { cpu: 100m, memory: 64Mi }
