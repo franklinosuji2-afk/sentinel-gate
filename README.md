@@ -1,195 +1,544 @@
 # 🛡️ KubeSentinel
 
-> **GitOps Security & Policy Enforcement Platform for Kubernetes.**
-> A production-style local Kubernetes platform that rejects unsafe workloads *before* they deploy and detects threats *after* they run.
+> **GitOps-Driven Kubernetes Security & Policy Enforcement Platform**
 
-[![CI](https://github.com/USER/kubesentinel/actions/workflows/ci.yml/badge.svg)](https://github.com/USER/kubesentinel/actions)
-![Kubernetes](https://img.shields.io/badge/Kubernetes-1.29-326CE5?logo=kubernetes&logoColor=white)
-![ArgoCD](https://img.shields.io/badge/GitOps-ArgoCD-EF7B4D?logo=argo&logoColor=white)
-![OPA](https://img.shields.io/badge/Policy-OPA%20Gatekeeper-7B68EE?logo=openpolicyagent&logoColor=white)
-![Falco](https://img.shields.io/badge/Runtime-Falco-00B1B0)
-![Trivy](https://img.shields.io/badge/Scanner-Trivy-1904DA)
+A production-style, local-first Kubernetes security platform that prevents insecure workloads **before deployment** and detects threats **after runtime** using layered security controls.
 
----
+KubeSentinel demonstrates how modern platform teams implement **GitOps**, **policy-as-code**, **container vulnerability scanning**, **runtime threat detection**, and **observability** to secure Kubernetes environments end-to-end.
 
-## 📌 Problem Statement
+Built with:
 
-Most Kubernetes clusters fail security review for the same reasons: containers running as root, missing resource limits, `:latest` tags, privileged pods, unscanned images, and no runtime visibility. Fixing these reactively is expensive. **KubeSentinel** shifts security left (policy-as-code in CI + admission control) *and* right (runtime detection with Falco), wired together with a GitOps workflow so Git — not `kubectl` — is the source of truth.
-
-## 🎯 What it demonstrates
-
-- **Platform engineering** — reproducible local Kubernetes via Kind, one-command bootstrap.
-- **GitOps** — Argo CD reconciles cluster state from this repo. No manual production `kubectl apply`.
-- **Policy-as-Code** — OPA Gatekeeper rejects non-compliant workloads at admission time.
-- **DevSecOps** — Trivy scans images, manifests, and configs in CI; pipeline fails on CRITICAL CVEs.
-- **Runtime security** — Falco detects shell-in-container, privilege escalation, suspicious exec.
-- **Observability** — Prometheus + Grafana for cluster, app, and policy-violation metrics.
+* Kubernetes
+* Argo CD
+* Open Policy Agent Gatekeeper
+* Falco
+* Trivy
+* Prometheus
+* Grafana
 
 ---
 
-## 🏗️ Architecture
+## 🚀 Project Overview
+
+Most Kubernetes security incidents trace back to a small set of preventable misconfigurations:
+
+* Containers running as root
+* Missing CPU / memory limits
+* Privileged workloads
+* Usage of mutable `latest` tags
+* Unscanned container images
+* Lack of runtime visibility
+
+These issues often surface **after deployment**, when remediation becomes expensive and operationally risky.
+
+**KubeSentinel solves this by implementing defense in depth across the full workload lifecycle:**
+
+### Shift Left (Pre-Deployment)
+
+Catch security issues in CI before workloads reach the cluster.
+
+### Admission Control (Deployment-Time)
+
+Reject unsafe manifests before scheduling.
+
+### Runtime Security (Post-Deployment)
+
+Detect suspicious behavior inside running workloads.
+
+---
+
+# 🎯 What This Project Demonstrates
+
+KubeSentinel is designed as a portfolio artifact showcasing advanced DevOps and platform engineering practices.
+
+It demonstrates:
+
+✅ Reproducible local Kubernetes environments
+✅ GitOps-based deployment workflows
+✅ Policy-as-code enforcement
+✅ CI-integrated vulnerability scanning
+✅ Runtime threat detection
+✅ Observability-driven security monitoring
+
+---
+
+# 🏗 Architecture
 
 ```text
-                        ┌──────────────────────────┐
-                        │     Developer / CI       │
-                        │   git push  →  GitHub    │
-                        └────────────┬─────────────┘
-                                     │
-                ┌────────────────────┴────────────────────┐
-                │           GitHub Actions (CI)           │
-                │  lint → test → build → Trivy → policies │
-                └────────────────────┬────────────────────┘
-                                     │ image + manifests
-                                     ▼
-                        ┌──────────────────────────┐
-                        │        Argo CD           │  ← source of truth: Git
-                        │   sync → reconcile       │
-                        └────────────┬─────────────┘
-                                     ▼
-   ┌─────────────────────────────────────────────────────────────────┐
-   │                     Kubernetes (Kind cluster)                   │
-   │                                                                 │
-   │   ┌──────────────────┐   admission   ┌───────────────────────┐  │
-   │   │  Demo App (API)  │ ◄──────────── │  OPA Gatekeeper       │  │
-   │   │  /health /metrics│   reject if   │  no-root, no-latest,  │  │
-   │   └────────┬─────────┘   unsafe      │  limits, no-privileged│  │
-   │            │ metrics                 └───────────────────────┘  │
-   │            ▼                                                    │
-   │   ┌──────────────────┐    alerts     ┌───────────────────────┐  │
-   │   │   Prometheus     │ ◄──────────── │        Falco          │  │
-   │   │     Grafana      │               │  runtime threat feed  │  │
-   │   └──────────────────┘               └───────────────────────┘  │
-   └─────────────────────────────────────────────────────────────────┘
+                       ┌──────────────────────────┐
+                       │     Developer / CI       │
+                       │   git push → GitHub      │
+                       └────────────┬─────────────┘
+                                    │
+              ┌─────────────────────┴─────────────────────┐
+              │           GitHub Actions CI               │
+              │ lint → test → build → scan → validate    │
+              └─────────────────────┬─────────────────────┘
+                                    │
+                                    ▼
+                       ┌──────────────────────────┐
+                       │        Argo CD           │
+                       │   Sync / Reconcile       │
+                       └────────────┬─────────────┘
+                                    │
+                                    ▼
+ ┌─────────────────────────────────────────────────────────────────────┐
+ │                 Kubernetes Cluster (Kind)                          │
+ │                                                                    │
+ │  Demo App ── admission ──► Gatekeeper Policies                     │
+ │     │                        - no root                             │
+ │     │                        - no latest                           │
+ │     │                        - resource limits                     │
+ │     │                        - no privileged                       │
+ │     ▼                                                              │
+ │  Metrics ─────────────► Prometheus / Grafana                       │
+ │                                                                    │
+ │  Runtime Events ──────► Falco Threat Detection                     │
+ └─────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## ⚡ Quick Start
+# ⚡ Quick Start
 
-Requires: Docker, `kind`, `kubectl`, `helm`, `make`.
+## Prerequisites
+
+Install:
+
+* Docker
+* Kind
+* `kubectl`
+* Helm
+* `make`
+
+---
+
+## Bootstrap Environment
 
 ```bash
-make cluster      # provision multi-node Kind cluster
-make bootstrap    # install Argo CD, Gatekeeper, Prometheus, Falco
-make deploy       # deploy demo app via GitOps
-make scan         # run Trivy against image + manifests
-make violate      # try to deploy intentionally insecure manifests (should be rejected)
-make monitor      # print Grafana / Argo CD access instructions
-make destroy      # tear it all down
+make cluster
+make bootstrap
+make deploy
 ```
-
-Total bootstrap time on a laptop: ~5 minutes.
 
 ---
 
-## 🧱 Repository Layout
+## Security Testing
 
+Run vulnerability scan:
+
+```bash
+make scan
 ```
+
+Deploy intentionally insecure manifests:
+
+```bash
+make violate
+```
+
+Monitor dashboards and access instructions:
+
+```bash
+make monitor
+```
+
+Destroy cluster:
+
+```bash
+make destroy
+```
+
+---
+
+### Expected Setup Time
+
+~5 minutes on a modern laptop.
+
+---
+
+# 📁 Repository Structure
+
+```bash
 kubesentinel/
-├── apps/demo-app/             FastAPI service + Dockerfile + k8s manifests
-├── argocd/                    Argo CD Application definitions
-├── cluster/                   Kind config + bootstrap script
-├── policies/gatekeeper/       ConstraintTemplates + Constraints
+│
+├── apps/demo-app/
+│   ├── app/
+│   ├── k8s/
+│   ├── Dockerfile
+│   └── requirements.txt
+│
+├── argocd/
+│   └── demo-app.yaml
+│
+├── cluster/
+│   ├── bootstrap.sh
+│   └── kind-config.yaml
+│
+├── policies/gatekeeper/
+│   ├── constraints/
+│   └── templates/
+│
 ├── security/
-│   ├── trivy/                 Trivy config + ignore policy
-│   └── falco/                 Falco rules + values
+│   ├── trivy/
+│   └── falco/
+│
 ├── monitoring/
-│   ├── prometheus/            kube-prometheus-stack values
-│   └── grafana/dashboards/    Custom dashboards (JSON)
-├── manifests/bad/             Intentionally insecure manifests for `make violate`
-├── .github/workflows/ci.yml   Lint → test → build → Trivy → policy validate
+│   ├── prometheus/
+│   └── grafana/dashboards/
+│
+├── manifests/bad/
+│
+├── .github/workflows/
+│   └── ci.yml
+│
 ├── Makefile
 └── README.md
 ```
 
 ---
 
-## 🔄 GitOps Workflow
+# 🔄 GitOps Workflow
 
-1. Developer pushes to `main`.
-2. **CI** lints YAML, tests the app, builds the image, runs Trivy, and `kubectl --dry-run`s manifests through Gatekeeper policies.
-3. On green, the image tag in `apps/demo-app/k8s/deployment.yaml` is bumped.
-4. **Argo CD** detects the Git change and syncs the cluster automatically.
-5. Gatekeeper enforces policies at admission. Anything non-compliant never reaches the kubelet.
+KubeSentinel follows a GitOps deployment model.
 
-No human runs `kubectl apply` in production. Rollback = `git revert`.
+### Step 1 — Developer Pushes Code
+
+A commit to `main` triggers CI.
 
 ---
 
-## 🚔 Policies (OPA Gatekeeper)
+### Step 2 — CI Pipeline Runs
 
-| Policy | Rejects when… |
-|---|---|
-| `K8sDisallowRoot` | `securityContext.runAsUser == 0` or `runAsNonRoot` missing |
-| `K8sRequiredResources` | container has no `resources.limits.cpu` / `memory` |
-| `K8sDisallowLatestTag` | image tag is `latest` or omitted |
-| `K8sDisallowPrivileged` | `securityContext.privileged: true` |
+Pipeline stages:
 
-Try it:
+* YAML linting
+* Application tests
+* Container build
+* Vulnerability scanning
+* Policy validation
+
+---
+
+### Step 3 — Image & Manifest Validation
+
+CI validates:
+
+* image vulnerabilities
+* manifest correctness
+* policy compliance
+
+---
+
+### Step 4 — Git Becomes Source of Truth
+
+Approved changes are committed to Git.
+
+No manual deployment.
+
+No direct cluster drift.
+
+---
+
+### Step 5 — Argo CD Sync
+
+Argo CD reconciles cluster state with repository state.
+
+Rollback is simple:
+
+```bash
+git revert
+```
+
+---
+
+# 🚔 Policy Enforcement (OPA Gatekeeper)
+
+KubeSentinel uses Gatekeeper constraints to block insecure workloads.
+
+| Policy                  | Description                  |
+| ----------------------- | ---------------------------- |
+| `K8sDisallowRoot`       | Blocks root containers       |
+| `K8sRequiredResources`  | Requires CPU/memory limits   |
+| `K8sDisallowLatestTag`  | Rejects mutable image tags   |
+| `K8sDisallowPrivileged` | Blocks privileged containers |
+
+---
+
+## Example Policy Violation
 
 ```bash
 kubectl apply -f manifests/bad/root-container.yaml
-# Error from server ([K8sDisallowRoot] Container must not run as root)
+```
+
+Output:
+
+```text
+Error from server:
+[K8sDisallowRoot] Container must not run as root
+```
+
+Unsafe workloads never reach the scheduler.
+
+---
+
+# 🔍 Security Pipeline
+
+```text
+Container Build
+      │
+      ▼
+Trivy Vulnerability Scan
+      │
+      ▼
+Policy Validation
+      │
+      ▼
+Registry / Deployment
+      │
+      ▼
+Runtime Monitoring (Falco)
 ```
 
 ---
 
-## 🔍 Security Workflow
+## Trivy Scanning
 
-```
-Image build ──► Trivy (CRITICAL = fail) ──► Push registry
-Manifest PR ──► kubeconform + Gatekeeper dry-run
-Runtime    ──► Falco rules → stdout/JSON → Prometheus alert
-```
+Trivy scans:
 
-Falco ships with rule overrides for: shell-in-container, write below `/etc`, package-manager exec inside a running pod, outbound connections to non-allow-listed CIDRs.
+* container images
+* filesystem
+* manifests
+* IaC configs
+
+Pipeline fails on:
+
+* CRITICAL CVEs
+* policy violations
 
 ---
 
-## 📈 Monitoring
+## Falco Runtime Detection
 
-`kube-prometheus-stack` (Prometheus, Alertmanager, Grafana, node-exporter, kube-state-metrics) plus two custom dashboards:
+Falco detects suspicious runtime behavior such as:
 
-- **Cluster Health** — node CPU/mem, pod restarts, API latency.
-- **Security Posture** — Gatekeeper denials over time, Falco alerts by rule, image scan results.
+* shell execution inside containers
+* privilege escalation
+* writes under `/etc`
+* package manager execution
+* unexpected outbound network traffic
 
-Access:
+This adds post-deployment protection.
+
+---
+
+# 📈 Monitoring & Observability
+
+Monitoring stack uses **kube-prometheus-stack**.
+
+Components:
+
+* Prometheus
+* Alertmanager
+* Node Exporter
+* kube-state-metrics
+* Grafana
+
+---
+
+## Custom Dashboards
+
+### Cluster Health
+
+Metrics include:
+
+* CPU usage
+* Memory utilization
+* Pod restarts
+* API latency
+
+---
+
+### Security Posture
+
+Metrics include:
+
+* Gatekeeper denials
+* Falco alerts by rule
+* Vulnerability scan history
+
+---
+
+## Access Grafana
 
 ```bash
 kubectl -n monitoring port-forward svc/kube-prometheus-stack-grafana 3000:80
-# admin / prom-operator
+```
+
+Default credentials:
+
+```text
+admin / prom-operator
 ```
 
 ---
 
-## 🖼️ Screenshots
+# 🖼 Screenshots
 
-> _Add screenshots after running locally:_
-> - `docs/img/argocd.png` — Argo CD app tree
-> - `docs/img/grafana-security.png` — Security Posture dashboard
-> - `docs/img/gatekeeper-deny.png` — `kubectl` rejection message
-> - `docs/img/falco-alert.png` — Falco shell-in-container alert
+Recommended screenshots for recruiter/demo impact:
 
----
+* Argo CD application tree
+* Security Posture dashboard
+* Gatekeeper rejection logs
+* Falco runtime alerts
 
-## 🧠 Engineering Lessons
+Suggested path:
 
-- **Admission control beats audit.** Catching a violation at `kubectl apply` is 100× cheaper than discovering it in a CVE report two sprints later.
-- **GitOps makes rollback trivial.** `git revert` is the incident response runbook.
-- **Defense in depth is not optional.** CI scanning, admission policies, and runtime detection each catch what the others miss.
-- **Local-first developer loop.** Kind + Make gives every engineer the full platform on a laptop — no shared dev cluster, no drift.
-
-## 🛣️ Future Improvements
-
-- Sign images with **Cosign** and enforce signature verification in Gatekeeper.
-- Generate **SBOMs** with Syft and gate releases on SBOM diff.
-- Add **Kyverno** alongside Gatekeeper for mutation policies (auto-inject `runAsNonRoot`).
-- **Tekton** pipelines for in-cluster CI.
-- **External Secrets Operator** + HashiCorp Vault for secret management.
-- Multi-tenant namespaces with **Network Policies** and **Hierarchical Namespace Controller**.
+```text
+docs/img/
+```
 
 ---
 
-## 📜 License
+# 🧠 Engineering Lessons
 
-MIT — see [LICENSE](LICENSE).
+KubeSentinel highlights several practical lessons from real-world platform engineering.
+
+---
+
+## Admission Control Beats Audit
+
+Blocking insecure workloads during admission is dramatically cheaper than remediation after deployment.
+
+---
+
+## GitOps Simplifies Incident Response
+
+Rollback becomes deterministic:
+
+```bash
+git revert
+```
+
+No imperative cluster changes.
+
+---
+
+## Security Requires Multiple Layers
+
+No single tool catches everything.
+
+Effective Kubernetes security requires:
+
+* CI scanning
+* policy enforcement
+* runtime detection
+* observability
+
+---
+
+## Local-First Developer Experience Matters
+
+Using Kind + Make provides every engineer with a reproducible platform on their laptop.
+
+Benefits:
+
+* no shared dev cluster
+* no environment drift
+* faster iteration
+
+---
+
+# 🔮 Future Enhancements
+
+Planned improvements:
+
+### Supply Chain Security
+
+* [Cosign](https://github.com/sigstore/cosign?utm_source=chatgpt.com) image signing
+* SBOM generation via [Syft](https://github.com/anchore/syft?utm_source=chatgpt.com)
+
+### Advanced Policy
+
+* [Kyverno](https://kyverno.io/?utm_source=chatgpt.com) mutation policies
+
+### CI/CD Expansion
+
+* [Tekton](https://tekton.dev/?utm_source=chatgpt.com) pipelines
+
+### Secrets Management
+
+* [HashiCorp Vault](https://www.vaultproject.io/?utm_source=chatgpt.com) integration
+* External Secrets Operator
+
+### Multi-Tenancy
+
+* Network Policies
+* Namespace hierarchy
+* Tenant isolation
+
+---
+
+# 📦 Tech Stack
+
+### Platform
+
+* Kubernetes
+* Kind
+
+### GitOps
+
+* Argo CD
+
+### Security
+
+* Open Policy Agent Gatekeeper
+* Falco
+* Trivy
+
+### Monitoring
+
+* Prometheus
+* Grafana
+
+### CI/CD
+
+* [GitHub Actions](https://github.com/features/actions?utm_source=chatgpt.com)
+
+---
+
+# 💡 Why This Project Matters
+
+Many DevOps portfolios demonstrate deployment.
+
+Few demonstrate **secure platform ownership**.
+
+KubeSentinel showcases the ability to think beyond infrastructure provisioning into:
+
+* policy enforcement
+* runtime defense
+* GitOps operations
+* platform governance
+* security observability
+
+This reflects the mindset expected from modern **Platform Engineers**, **DevSecOps Engineers**, and **Cloud Security Engineers**.
+
+---
+
+# 👨‍💻 Author
+
+## Franklin Chinonso Osuji
+
+Cloud & DevOps Engineer
+
+AWS | Terraform | Kubernetes | GitOps | DevSecOps | Platform Engineering
+
+> Building secure, scalable infrastructure with automation, policy, and observability at the core.
+
+---
+
+# 📄 License
+
+Licensed under the **MIT License**.
+
+---
