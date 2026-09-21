@@ -375,11 +375,7 @@ Metrics include:
 kubectl -n monitoring port-forward svc/kube-prometheus-stack-grafana 3000:80
 ```
 
-Default credentials:
-
-```text
-admin / prom-operator
-```
+Grafana credentials are configured by the installed Helm release and should not be hard-coded in documentation.
 
 ---
 
@@ -455,20 +451,20 @@ Planned improvements:
 
 ### Supply Chain Security
 
-* [Cosign](https://github.com/sigstore/cosign?utm_source=chatgpt.com) image signing
-* SBOM generation via [Syft](https://github.com/anchore/syft?utm_source=chatgpt.com)
+* [Cosign](https://github.com/sigstore/cosign?) image signing
+* SBOM generation via [Syft](https://github.com/anchore/syft?)
 
 ### Advanced Policy
 
-* [Kyverno](https://kyverno.io/?utm_source=chatgpt.com) mutation policies
+* [Kyverno](https://kyverno.io/?) mutation policies
 
 ### CI/CD Expansion
 
-* [Tekton](https://tekton.dev/?utm_source=chatgpt.com) pipelines
+* [Tekton](https://tekton.dev/?) pipelines
 
 ### Secrets Management
 
-* [HashiCorp Vault](https://www.vaultproject.io/?utm_source=chatgpt.com) integration
+* [HashiCorp Vault](https://www.vaultproject.io/?) integration
 * External Secrets Operator
 
 ### Multi-Tenancy
@@ -503,7 +499,7 @@ Planned improvements:
 
 ### CI/CD
 
-* [GitHub Actions](https://github.com/features/actions?utm_source=chatgpt.com)
+* [GitHub Actions](https://github.com/features/actions?)
 
 ---
 
